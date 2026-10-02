@@ -37,6 +37,7 @@ func NewServer(client *discord.Client) *Server {
 	RegisterAutoModTools(s, client)
 	RegisterPollTools(s, client)
 	RegisterSoundboardTools(s, client)
+	RegisterStickerTools(s, client)
 
 	return &Server{
 		MCPServer: s,
