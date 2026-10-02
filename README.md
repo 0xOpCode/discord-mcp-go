@@ -13,7 +13,7 @@
 
 ## ⚡ Overview
 
-`discord-mcp-go` is a high-performance Discord MCP server designed for AI assistants and autonomous workflows (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It wraps the Discord API into 75+ granular MCP tools, enabling full server administration, moderation, channel operations, and automated messaging.
+`discord-mcp-go` is a high-performance Discord MCP server designed for AI assistants and autonomous workflows (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It wraps the Discord API into 96 granular MCP tools, enabling full server administration, moderation, channel operations, polls, stickers, soundboard clips, and automated messaging.
 
 ### Why Go over Java Spring Boot?
 
@@ -113,14 +113,14 @@ Add under Connectors UI or via reverse proxy URL:
 
 ---
 
-## 🛠️ Complete Tool Directory (82+ Tools)
+## 🛠️ Complete Tool Directory (96 Tools)
 
 ### Multi-Server & Discovery
 - `list_servers`: List all Discord guilds joined by the bot with IDs and admin flags.
 - `get_server_info`: Detailed guild metadata, counts, owner, and settings.
-- `check_bot_permissions`: Comprehensive audit of bot permissions inside a guild.
+- `check_bot_permissions`: Audit bot permissions inside a guild.
 - `get_audit_logs`: Inspect audit log events and moderation actions.
-- `set_bot_activity`: Set custom bot presence status (playing, watching, streaming, listening).
+- `set_bot_activity`: Set bot presence status (playing, watching, streaming, listening).
 
 ### Message Management
 - `send_message`: Post text messages to specific channels.
@@ -144,7 +144,7 @@ Add under Connectors UI or via reverse proxy URL:
 - `delete_channel`: Delete text or voice channels.
 - `find_channel`: Search channels by name substring.
 - `list_channels`: List all server channels with IDs and types.
-- `get_channel_info`: Fetch detailed channel properties.
+- `get_channel_info`: Fetch channel properties.
 - `move_channel`: Reposition channels and update category parentage.
 - `create_thread`: Spawn public or private discussion threads inside text channels.
 - `list_threads`: List active discussion threads within a text channel.
@@ -168,25 +168,31 @@ Add under Connectors UI or via reverse proxy URL:
 - `upsert_member_channel_permissions`: Set allow/deny bitmasks for specific members.
 - `delete_channel_permission_overwrite`: Reset permission overrides.
 
-### Moderation
+### Moderation & Member Pruning
 - `kick_member`: Kick members with audit log reasons.
 - `ban_member`: Ban users with configurable message deletion windows.
 - `unban_member`: Revoke bans.
 - `timeout_member`: Apply communication timeouts (mutes) with minute-precision.
-- `remove_timeout`: Lift communication timeouts immediately.
+- `remove_timeout`: Lift communication timeouts.
 - `set_nickname`: Modify member nicknames.
 - `get_bans`: List banned users and recorded reasons.
+- `estimate_prune`: Estimate number of inactive members eligible for pruning.
+- `prune_members`: Kick inactive members past specified days threshold.
 
 ### Auto-Moderation
 - `list_automod_rules`: List active AutoMod keyword and spam filter rules.
 - `create_automod_rule`: Configure custom keyword and spam blocking rules.
+
+### Interactive Polls
+- `create_poll`: Create native Discord polls with answers, duration hours, and multi-select.
+- `end_poll`: Expire and finalize active polls.
 
 ### Voice & Stage Channels
 - `create_voice_channel`: Create voice channels with bitrate and user limits.
 - `create_stage_channel`: Create stage channels for audio events.
 - `edit_voice_channel`: Update voice channel parameters.
 - `move_member`: Move active voice users between rooms.
-- `disconnect_member`: Force-disconnect members from voice.
+- `disconnect_member`: Disconnect members from voice.
 - `modify_voice_state`: Server mute or deafen members.
 
 ### Webhooks
@@ -224,6 +230,22 @@ Add under Connectors UI or via reverse proxy URL:
 - `create_emoji`: Upload new custom emojis using base64 image strings.
 - `edit_emoji`: Rename custom emojis.
 - `delete_emoji`: Remove custom emojis.
+
+### Soundboard Sounds
+- `list_soundboard_sounds`: List custom soundboard audio clips.
+- `create_soundboard_sound`: Upload custom soundboard audio clips with volume and emoji.
+- `delete_soundboard_sound`: Remove soundboard clips.
+
+### Custom Stickers
+- `list_stickers`: List custom guild stickers.
+- `create_sticker`: Upload custom stickers using base64 data or file paths.
+- `delete_sticker`: Remove custom stickers.
+
+### Role Connections & Linked Roles
+- `get_role_connection`: Fetch user application role connection metadata.
+- `update_role_connection`: Update application role connection platform and metadata.
+- `get_role_connection_metadata`: Inspect application role connection metadata configuration.
+- `update_role_connection_metadata`: Configure metadata records for verification rules.
 
 ---
 
