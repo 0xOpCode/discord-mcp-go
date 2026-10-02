@@ -1,11 +1,13 @@
 package mcp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
 
 	"github.com/0xOpCode/discord-mcp-go/internal/discord"
+	"github.com/bwmarrin/discordgo"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -229,6 +231,110 @@ func RegisterMessageTools(s *server.MCPServer, client *discord.Client) {
 			}
 
 			return successResult(fmt.Sprintf("Successfully purged %d messages from channel `%s`.", len(messageIDs), channelID)), nil
+		},
+	)
+
+	// get_message
+	s.AddTool(
+		mcp.NewTool("get_message",
+			mcp.WithDescription("Retrieve a specific Discord message by channel ID and message ID"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID containing the message")),
+			mcp.WithString("messageId", mcp.Required(), mcp.Description("Message ID to fetch")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			messageID := getString(req.Params.Arguments, "messageId")
+			if channelID == "" || messageID == "" {
+				return errorResult(fmt.Errorf("channelId and messageId are required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			m, err := client.Session.ChannelMessage(channelID, messageID)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to fetch message: %w", err)), nil
+			}
+
+			var sb strings.Builder
+			authorName := "Unknown"
+			authorID := "N/A"
+			if m.Author != nil {
+				authorName = m.Author.Username
+				authorID = m.Author.ID
+			}
+
+			sb.WriteString(fmt.Sprintf("### Message Details (`%s`)\n\n", m.ID))
+			sb.WriteString(fmt.Sprintf("- **Author:** %s (`%s`)\n", authorName, authorID))
+			sb.WriteString(fmt.Sprintf("- **Channel ID:** `%s`\n", m.ChannelID))
+			sb.WriteString(fmt.Sprintf("- **Timestamp:** %s\n", m.Timestamp.Format("2006-01-02 15:04:05 UTC")))
+			if m.EditedTimestamp != nil {
+				sb.WriteString(fmt.Sprintf("- **Edited:** %s\n", m.EditedTimestamp.Format("2006-01-02 15:04:05 UTC")))
+			}
+			sb.WriteString(fmt.Sprintf("- **Content:**\n%s\n", m.Content))
+
+			if len(m.Attachments) > 0 {
+				sb.WriteString(fmt.Sprintf("\n**Attachments (%d):**\n", len(m.Attachments)))
+				for _, att := range m.Attachments {
+					sb.WriteString(fmt.Sprintf("- [%s](%s) (%d bytes, %s)\n", att.Filename, att.URL, att.Size, att.ContentType))
+				}
+			}
+
+			if len(m.Reactions) > 0 {
+				sb.WriteString("\n**Reactions:**\n")
+				for _, r := range m.Reactions {
+					sb.WriteString(fmt.Sprintf("- %s: %d\n", r.Emoji.Name, r.Count))
+				}
+			}
+
+			return successResult(sb.String()), nil
+		},
+	)
+
+	// send_file
+	s.AddTool(
+		mcp.NewTool("send_file",
+			mcp.WithDescription("Upload a file or attachment to a Discord text channel"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID where file will be sent")),
+			mcp.WithString("filePath", mcp.Required(), mcp.Description("Local file path or base64 data URI")),
+			mcp.WithString("content", mcp.Description("Optional message text accompanying file")),
+			mcp.WithString("fileName", mcp.Description("Optional custom file name")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			filePath := getString(req.Params.Arguments, "filePath")
+			if channelID == "" || filePath == "" {
+				return errorResult(fmt.Errorf("channelId and filePath are required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			customName := getString(req.Params.Arguments, "fileName")
+			fileBytes, fileName, err := readFileInput(filePath, customName)
+			if err != nil {
+				return errorResult(fmt.Errorf("invalid file: %w", err)), nil
+			}
+
+			content := getString(req.Params.Arguments, "content")
+			msgSend := &discordgo.MessageSend{
+				Content: content,
+				Files: []*discordgo.File{
+					{
+						Name:   fileName,
+						Reader: bytes.NewReader(fileBytes),
+					},
+				},
+			}
+
+			msg, err := client.Session.ChannelMessageSendComplex(channelID, msgSend)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to upload file: %w", err)), nil
+			}
+
+			return successResult(fmt.Sprintf("File `%s` uploaded to channel `%s`. Message ID: `%s`", fileName, channelID, msg.ID)), nil
 		},
 	)
 }

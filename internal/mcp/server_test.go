@@ -3,6 +3,7 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 
@@ -35,20 +36,26 @@ func TestRegisteredToolsCount(t *testing.T) {
 	toolCount := len(listResp.Result.Tools)
 	t.Logf("Total registered tools: %d", toolCount)
 
-	foundPipeline := false
+	toolNames := make(map[string]bool)
 	for _, tool := range listResp.Result.Tools {
-		if tool.Name == "run_pipeline" {
-			foundPipeline = true
-			break
+		toolNames[tool.Name] = true
+	}
+
+	expectedTools := []string{
+		"run_pipeline",
+		"get_message",
+		"send_file",
+		"send_private_file",
+	}
+
+	for _, name := range expectedTools {
+		if !toolNames[name] {
+			t.Fatalf("expected tool '%s' not found in registered tools", name)
 		}
 	}
 
-	if !foundPipeline {
-		t.Fatal("run_pipeline tool not found in registered tools")
-	}
-
-	if toolCount < 97 {
-		t.Fatalf("expected at least 97 tools, got %d", toolCount)
+	if toolCount != 100 {
+		t.Fatalf("expected 100 tools, got %d", toolCount)
 	}
 }
 
@@ -93,5 +100,42 @@ func TestRunPipelineRecursiveDisallowed(t *testing.T) {
 
 	if !strings.Contains(string(respBytes), "recursive run_pipeline invocation is disallowed") {
 		t.Fatalf("expected recursion rejection, got: %s", string(respBytes))
+	}
+}
+
+func TestReadFileInput(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "testfile-*.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	content := "hello discord file test"
+	if _, err := tmpFile.WriteString(content); err != nil {
+		t.Fatal(err)
+	}
+	tmpFile.Close()
+
+	data, name, err := readFileInput(tmpFile.Name(), "")
+	if err != nil {
+		t.Fatalf("readFileInput failed: %v", err)
+	}
+	if string(data) != content {
+		t.Fatalf("content mismatch: got %s, want %s", string(data), content)
+	}
+	if name == "" {
+		t.Fatal("expected non-empty filename")
+	}
+
+	dataURI := "data:text/plain;base64,aGVsbG8="
+	uriData, uriName, err := readFileInput(dataURI, "")
+	if err != nil {
+		t.Fatalf("data URI decode failed: %v", err)
+	}
+	if string(uriData) != "hello" {
+		t.Fatalf("data URI content mismatch: got %s, want hello", string(uriData))
+	}
+	if uriName != "attachment.txt" {
+		t.Fatalf("expected attachment.txt, got %s", uriName)
 	}
 }

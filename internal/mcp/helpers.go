@@ -1,13 +1,75 @@
 package mcp
 
 import (
+	"encoding/base64"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/mark3labs/mcp-go/mcp"
 )
+
+func readFileInput(input, defaultName string) ([]byte, string, error) {
+	cleanInput := strings.TrimSpace(input)
+	if cleanInput == "" {
+		return nil, "", fmt.Errorf("file path or base64 data required")
+	}
+
+	if strings.HasPrefix(cleanInput, "data:") {
+		idx := strings.Index(cleanInput, ",")
+		if idx == -1 {
+			return nil, "", fmt.Errorf("malformed data URI")
+		}
+		header := cleanInput[:idx]
+		data := cleanInput[idx+1:]
+		ext := "bin"
+		if strings.Contains(header, "image/png") {
+			ext = "png"
+		} else if strings.Contains(header, "image/jpeg") || strings.Contains(header, "image/jpg") {
+			ext = "jpg"
+		} else if strings.Contains(header, "image/gif") {
+			ext = "gif"
+		} else if strings.Contains(header, "application/pdf") {
+			ext = "pdf"
+		} else if strings.Contains(header, "text/plain") {
+			ext = "txt"
+		} else if strings.Contains(header, "application/json") {
+			ext = "json"
+		}
+
+		raw, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			return nil, "", fmt.Errorf("invalid base64 in data URI: %w", err)
+		}
+
+		name := defaultName
+		if name == "" {
+			name = "attachment." + ext
+		}
+		return raw, name, nil
+	}
+
+	if data, err := os.ReadFile(cleanInput); err == nil {
+		name := defaultName
+		if name == "" {
+			name = filepath.Base(cleanInput)
+		}
+		return data, name, nil
+	}
+
+	if raw, err := base64.StdEncoding.DecodeString(cleanInput); err == nil {
+		name := defaultName
+		if name == "" {
+			name = "attachment.bin"
+		}
+		return raw, name, nil
+	}
+
+	return nil, "", fmt.Errorf("file not found on disk and input is not valid base64")
+}
 
 func getString(args map[string]interface{}, key string) string {
 	if val, ok := args[key]; ok && val != nil {
