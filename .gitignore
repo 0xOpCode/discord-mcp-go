@@ -1,0 +1,16 @@
+# Binaries
+bin/
+dist/
+discord-mcp-go
+
+# Environment variables
+.env
+.env.local
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
