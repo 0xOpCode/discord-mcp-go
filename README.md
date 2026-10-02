@@ -13,7 +13,7 @@
 
 ## Overview
 
-`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 100 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
+`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 101 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
 
 ### Core Capabilities
 
@@ -113,7 +113,7 @@ Add under Connectors UI or via reverse proxy URL:
 
 ---
 
-## 🛠️ Complete Tool Directory (100 Tools)
+## 🛠️ Complete Tool Directory (101 Tools)
 
 ### Compound Workflows & Pipelines
 - `run_pipeline`: Execute a sequence of MCP actions as connected blocks with variable reference interpolation (e.g. `{{step1.id}}`) in a single network round-trip.
@@ -126,7 +126,7 @@ Add under Connectors UI or via reverse proxy URL:
 - `set_bot_activity`: Set bot presence status (playing, watching, streaming, listening).
 
 ### Message Management
-- `send_message`: Post text messages to specific channels.
+- `send_message`: Post text messages, message replies (`replyToMessageId`), or rich embeds (`embedsJson`) to specific channels.
 - `get_message`: Fetch a specific message by channel ID and message ID.
 - `send_file`: Upload files or attachments (images, PDFs, documents) to a text channel.
 - `edit_message`: Edit bot-authored messages.
@@ -153,6 +153,7 @@ Add under Connectors UI or via reverse proxy URL:
 - `get_channel_info`: Fetch channel properties.
 - `move_channel`: Reposition channels and update category parentage.
 - `create_thread`: Spawn public or private discussion threads inside text channels.
+- `create_thread_from_message`: Start a public discussion thread directly on an existing message.
 - `list_threads`: List active discussion threads within a text channel.
 
 ### Category Management

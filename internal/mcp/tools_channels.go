@@ -352,4 +352,37 @@ func RegisterChannelTools(s *server.MCPServer, client *discord.Client) {
 			return successResult(sb.String()), nil
 		},
 	)
+
+	// create_thread_from_message
+	s.AddTool(
+		mcp.NewTool("create_thread_from_message",
+			mcp.WithDescription("Create a new public discussion thread directly on an existing message"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID containing the message")),
+			mcp.WithString("messageId", mcp.Required(), mcp.Description("Parent message ID")),
+			mcp.WithString("name", mcp.Required(), mcp.Description("Thread name (1-100 characters)")),
+			mcp.WithNumber("autoArchiveDuration", mcp.Description("Auto-archive duration in minutes: 60, 1440, 4320, 10080 (default: 1440)")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			messageID := getString(req.Params.Arguments, "messageId")
+			name := getString(req.Params.Arguments, "name")
+
+			if channelID == "" || messageID == "" || name == "" {
+				return errorResult(fmt.Errorf("channelId, messageId, and name are required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			duration := getInt(req.Params.Arguments, "autoArchiveDuration", 1440)
+
+			thread, err := client.Session.MessageThreadStart(channelID, messageID, name, duration)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to create thread from message: %w", err)), nil
+			}
+
+			return successResult(fmt.Sprintf("Thread `%s` started on message `%s`. Thread ID: `%s`", thread.Name, messageID, thread.ID)), nil
+		},
+	)
 }

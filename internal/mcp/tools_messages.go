@@ -3,6 +3,7 @@ package mcp
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -16,18 +17,55 @@ func RegisterMessageTools(s *server.MCPServer, client *discord.Client) {
 	// send_message
 	s.AddTool(
 		mcp.NewTool("send_message",
-			mcp.WithDescription("Send a message to a specific Discord text channel"),
+			mcp.WithDescription("Send a message, reply, or rich embeds to a specific Discord text channel"),
 			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID where message will be posted")),
-			mcp.WithString("content", mcp.Required(), mcp.Description("Text message body")),
+			mcp.WithString("content", mcp.Description("Text message body (optional if embedsJson is provided)")),
+			mcp.WithString("replyToMessageId", mcp.Description("Optional parent message ID to reply to")),
+			mcp.WithString("embedsJson", mcp.Description("Optional JSON array or single object of Discord embeds")),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			channelID := getString(req.Params.Arguments, "channelId")
 			content := getString(req.Params.Arguments, "content")
-			if channelID == "" || content == "" {
-				return errorResult(fmt.Errorf("channelId and content are required")), nil
+			replyTo := getString(req.Params.Arguments, "replyToMessageId")
+			embedsRaw := getString(req.Params.Arguments, "embedsJson")
+
+			if channelID == "" {
+				return errorResult(fmt.Errorf("channelId is required")), nil
 			}
 
-			msg, err := client.Session.ChannelMessageSend(channelID, content)
+			if content == "" && embedsRaw == "" {
+				return errorResult(fmt.Errorf("content or embedsJson is required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			msgSend := &discordgo.MessageSend{
+				Content: content,
+			}
+
+			if replyTo != "" {
+				msgSend.Reference = &discordgo.MessageReference{
+					MessageID: replyTo,
+					ChannelID: channelID,
+				}
+			}
+
+			if embedsRaw != "" {
+				var embeds []*discordgo.MessageEmbed
+				if err := json.Unmarshal([]byte(embedsRaw), &embeds); err != nil {
+					var single discordgo.MessageEmbed
+					if singleErr := json.Unmarshal([]byte(embedsRaw), &single); singleErr == nil {
+						embeds = []*discordgo.MessageEmbed{&single}
+					} else {
+						return errorResult(fmt.Errorf("invalid embedsJson: %w", err)), nil
+					}
+				}
+				msgSend.Embeds = embeds
+			}
+
+			msg, err := client.Session.ChannelMessageSendComplex(channelID, msgSend)
 			if err != nil {
 				return errorResult(fmt.Errorf("failed to send message: %w", err)), nil
 			}
