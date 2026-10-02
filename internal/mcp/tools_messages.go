@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/0xOpCode/discord-mcp-go/internal/discord"
@@ -373,6 +375,107 @@ func RegisterMessageTools(s *server.MCPServer, client *discord.Client) {
 			}
 
 			return successResult(fmt.Sprintf("File `%s` uploaded to channel `%s`. Message ID: `%s`", fileName, channelID, msg.ID)), nil
+		},
+	)
+
+	// search_guild_messages
+	s.AddTool(
+		mcp.NewTool("search_guild_messages",
+			mcp.WithDescription("Search messages across channels in a Discord server"),
+			mcp.WithString("content", mcp.Description("Text query to search for")),
+			mcp.WithString("channelId", mcp.Description("Optional channel ID filter")),
+			mcp.WithString("authorId", mcp.Description("Optional author user ID filter")),
+			mcp.WithString("mentions", mcp.Description("Optional mentioned user ID filter")),
+			mcp.WithString("has", mcp.Description("Filter by attachment type: 'link', 'embed', 'file', 'video', 'image', 'sound', 'sticker'")),
+			mcp.WithString("guildId", mcp.Description("Optional Discord Server ID")),
+			mcp.WithNumber("limit", mcp.Description("Number of messages (1-25, default 25)")),
+			mcp.WithNumber("offset", mcp.Description("Pagination offset (default 0)")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			guildID, err := client.ResolveGuildID(getString(req.Params.Arguments, "guildId"))
+			if err != nil {
+				return errorResult(err), nil
+			}
+
+			q := url.Values{}
+			if content := getString(req.Params.Arguments, "content"); content != "" {
+				q.Set("content", content)
+			}
+			if channelID := getString(req.Params.Arguments, "channelId"); channelID != "" {
+				q.Set("channel_id", channelID)
+			}
+			if authorID := getString(req.Params.Arguments, "authorId"); authorID != "" {
+				q.Set("author_id", authorID)
+			}
+			if mentions := getString(req.Params.Arguments, "mentions"); mentions != "" {
+				q.Set("mentions", mentions)
+			}
+			if has := getString(req.Params.Arguments, "has"); has != "" {
+				q.Set("has", has)
+			}
+
+			limit := getInt(req.Params.Arguments, "limit", 25)
+			if limit < 1 {
+				limit = 1
+			} else if limit > 25 {
+				limit = 25
+			}
+			q.Set("limit", strconv.Itoa(limit))
+
+			offset := getInt(req.Params.Arguments, "offset", 0)
+			if offset > 0 {
+				q.Set("offset", strconv.Itoa(offset))
+			}
+
+			endpoint := fmt.Sprintf("https://discord.com/api/v10/guilds/%s/messages/search?%s", guildID, q.Encode())
+			raw, err := client.Session.Request("GET", endpoint, nil)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to search messages: %w", err)), nil
+			}
+
+			var searchResp struct {
+				TotalResults int                      `json:"total_results"`
+				Messages     [][]*discordgo.Message   `json:"messages"`
+			}
+
+			if err := json.Unmarshal(raw, &searchResp); err != nil {
+				return errorResult(fmt.Errorf("failed to parse search response: %w", err)), nil
+			}
+
+			if searchResp.TotalResults == 0 || len(searchResp.Messages) == 0 {
+				return successResult(fmt.Sprintf("No messages matched query in server `%s`.", guildID)), nil
+			}
+
+			var sb strings.Builder
+			sb.WriteString(fmt.Sprintf("### Search Results in Server `%s` (%d total matches):\n\n", guildID, searchResp.TotalResults))
+			sb.WriteString(fmt.Sprintf("| %-20s | %-20s | %-20s | %-30s |\n", "Author", "Channel ID", "Message ID", "Content Preview"))
+			sb.WriteString("|----------------------|----------------------|----------------------|--------------------------------|\n")
+
+			for _, group := range searchResp.Messages {
+				if len(group) == 0 {
+					continue
+				}
+				m := group[0]
+				author := "Unknown"
+				if m.Author != nil {
+					author = m.Author.Username
+				}
+				if len(author) > 20 {
+					author = author[:17] + "..."
+				}
+
+				preview := strings.ReplaceAll(m.Content, "\n", " ")
+				if len(preview) > 30 {
+					preview = preview[:27] + "..."
+				}
+				if preview == "" && len(m.Attachments) > 0 {
+					preview = fmt.Sprintf("[%d attachments]", len(m.Attachments))
+				}
+
+				sb.WriteString(fmt.Sprintf("| %-20s | %-20s | %-20s | %-30s |\n", author, m.ChannelID, m.ID, preview))
+			}
+
+			return successResult(sb.String()), nil
 		},
 	)
 }
