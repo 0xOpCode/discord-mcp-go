@@ -23,6 +23,10 @@ func NewServer(client *discord.Client) *Server {
 	RegisterServerTools(s, client)
 	RegisterMessageTools(s, client)
 	RegisterUserTools(s, client)
+	RegisterChannelTools(s, client)
+	RegisterCategoryTools(s, client)
+	RegisterRoleTools(s, client)
+	RegisterPermissionTools(s, client)
 
 	return &Server{
 		MCPServer: s,
