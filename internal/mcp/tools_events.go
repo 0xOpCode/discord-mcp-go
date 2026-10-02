@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
@@ -96,6 +97,7 @@ func RegisterEventTools(s *server.MCPServer, client *discord.Client) {
 			mcp.WithString("name", mcp.Description("New event name")),
 			mcp.WithString("description", mcp.Description("New description")),
 			mcp.WithString("status", mcp.Description("Status: 'active', 'completed', 'canceled'")),
+			mcp.WithString("image", mcp.Description("Optional cover image (file path or base64 data URI)")),
 		),
 		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			eventID := getString(req.Params.Arguments, "eventId")
@@ -123,6 +125,19 @@ func RegisterEventTools(s *server.MCPServer, client *discord.Client) {
 					params.Status = discordgo.GuildScheduledEventStatusCompleted
 				case "canceled":
 					params.Status = discordgo.GuildScheduledEventStatusCanceled
+				}
+			}
+			if imageInput := getString(req.Params.Arguments, "image"); imageInput != "" {
+				fileBytes, fileName, err := readFileInput(imageInput, "cover.jpg")
+				if err == nil {
+					ext := "jpeg"
+					lower := strings.ToLower(fileName)
+					if strings.HasSuffix(lower, ".png") {
+						ext = "png"
+					} else if strings.HasSuffix(lower, ".webp") {
+						ext = "webp"
+					}
+					params.Image = fmt.Sprintf("data:image/%s;base64,%s", ext, base64.StdEncoding.EncodeToString(fileBytes))
 				}
 			}
 
@@ -240,6 +255,54 @@ func RegisterEventTools(s *server.MCPServer, client *discord.Client) {
 				}
 			}
 			return successResult(sb.String()), nil
+		},
+	)
+
+	// set_event_image
+	s.AddTool(
+		mcp.NewTool("set_event_image",
+			mcp.WithDescription("Upload and update the cover image banner for a scheduled guild event"),
+			mcp.WithString("eventId", mcp.Required(), mcp.Description("Scheduled event ID")),
+			mcp.WithString("image", mcp.Required(), mcp.Description("Local file path or base64 data URI (PNG, JPEG, WEBP)")),
+			mcp.WithString("guildId", mcp.Description("Optional Discord Server ID")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			eventID := getString(req.Params.Arguments, "eventId")
+			imageInput := getString(req.Params.Arguments, "image")
+			if eventID == "" || imageInput == "" {
+				return errorResult(fmt.Errorf("eventId and image are required")), nil
+			}
+
+			guildID, err := client.ResolveGuildID(getString(req.Params.Arguments, "guildId"))
+			if err != nil {
+				return errorResult(err), nil
+			}
+
+			fileBytes, fileName, err := readFileInput(imageInput, "cover.jpg")
+			if err != nil {
+				return errorResult(fmt.Errorf("invalid image: %w", err)), nil
+			}
+
+			ext := "jpeg"
+			lower := strings.ToLower(fileName)
+			if strings.HasSuffix(lower, ".png") {
+				ext = "png"
+			} else if strings.HasSuffix(lower, ".webp") {
+				ext = "webp"
+			}
+
+			dataURI := fmt.Sprintf("data:image/%s;base64,%s", ext, base64.StdEncoding.EncodeToString(fileBytes))
+
+			params := &discordgo.GuildScheduledEventParams{
+				Image: dataURI,
+			}
+
+			updated, err := client.Session.GuildScheduledEventEdit(guildID, eventID, params)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to update event image: %w", err)), nil
+			}
+
+			return successResult(fmt.Sprintf("Cover image updated for scheduled event `%s` (ID: `%s`).", updated.Name, updated.ID)), nil
 		},
 	)
 }

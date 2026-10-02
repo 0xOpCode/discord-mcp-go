@@ -13,7 +13,7 @@
 
 ## Overview
 
-`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 103 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
+`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 104 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
 
 ### Core Capabilities
 
@@ -113,7 +113,7 @@ Add under Connectors UI or via reverse proxy URL:
 
 ---
 
-## 🛠️ Complete Tool Directory (103 Tools)
+## 🛠️ Complete Tool Directory (104 Tools)
 
 ### Compound Workflows & Pipelines
 - `run_pipeline`: Execute a sequence of MCP actions as connected blocks with variable reference interpolation (e.g. `{{step1.id}}`) in a single network round-trip.
@@ -213,6 +213,7 @@ Add under Connectors UI or via reverse proxy URL:
 ### Scheduled Events
 - `create_guild_scheduled_event`: Schedule stage, voice, or external events with timestamps.
 - `edit_guild_scheduled_event`: Update event details and lifecycle statuses.
+- `set_event_image`: Upload and update the cover image banner for a scheduled event.
 - `delete_guild_scheduled_event`: Cancel and remove scheduled events.
 - `list_guild_scheduled_events`: List upcoming server events.
 - `get_guild_scheduled_event_users`: List subscribers interested in an event.
