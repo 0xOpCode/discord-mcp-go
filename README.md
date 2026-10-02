@@ -3,6 +3,8 @@
   <p><strong>Production Discord Model Context Protocol (MCP) server written in Go.</strong></p>
   <p>
     <a href="https://github.com/0xOpCode/discord-mcp-go/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+    <a href="https://github.com/0xOpCode/discord-mcp-go/actions"><img alt="CI Status" src="https://github.com/0xOpCode/discord-mcp-go/actions/workflows/ci.yml/badge.svg" /></a>
+    <a href="https://github.com/0xOpCode/discord-mcp-go/pkgs/container/discord-mcp-go"><img alt="Docker Package" src="https://img.shields.io/badge/GHCR-Container-24292e?logo=docker" /></a>
     <a href="https://golang.org"><img alt="Go Version" src="https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white" /></a>
     <a href="https://modelcontextprotocol.io"><img alt="MCP Protocol" src="https://img.shields.io/badge/MCP-Compatible-purple" /></a>
     <a href="https://discord.com"><img alt="Discord API" src="https://img.shields.io/badge/Discord-API%20v10-5865F2?logo=discord&logoColor=white" /></a>
@@ -29,35 +31,47 @@
 
 ## 🚀 Quickstart
 
-### 1. Run with Docker Compose (Recommended)
+### 1. Run with Docker / GHCR (Recommended)
 
-Create a `.env` file:
-```env
-DISCORD_TOKEN=your_bot_token_here
-DISCORD_GUILD_ID=optional_default_guild_id
-DISCORD_BLACKLISTED_GUILDS=optional_comma_separated_blacklisted_guild_ids
-PORT=8085
-TRANSPORT=sse
+Run the pre-built container from GitHub Container Registry:
+```bash
+docker run -d \
+  --name discord-mcp \
+  -p 8085:8085 \
+  -e DISCORD_TOKEN="your_bot_token" \
+  -e DISCORD_GUILD_ID="optional_default_guild_id" \
+  ghcr.io/0xopcode/discord-mcp-go:latest
 ```
 
-Start the container:
+Or use Docker Compose:
 ```bash
 docker compose up -d
 ```
 
-Endpoint will be available at: `http://localhost:8085/sse` (and `http://localhost:8085/mcp`).
+Endpoint is available at: `http://localhost:8085/sse`.
 
-### 2. Run from Source
+### 2. Standalone Binaries (GitHub Releases)
+
+Download pre-compiled static binaries from [GitHub Releases](https://github.com/0xOpCode/discord-mcp-go/releases):
+- **Linux**: `amd64` (baseline `GOAMD64=v1` for legacy AMD/Intel CPUs), `arm64`, `armv7`
+- **macOS**: `arm64` (Apple Silicon), `amd64` (Intel)
+- **Windows**: `amd64` (`.exe`), `arm64` (`.exe`)
 
 ```bash
-# Clone repository
+chmod +x discord-mcp-go-linux-amd64
+DISCORD_TOKEN="your_token" ./discord-mcp-go-linux-amd64 --transport=sse --port=8085
+```
+
+### 3. Run from Source
+
+```bash
 git clone https://github.com/0xOpCode/discord-mcp-go.git
 cd discord-mcp-go
 
-# Run in HTTP SSE mode (default, port 8085)
+# HTTP SSE mode
 DISCORD_TOKEN="your_bot_token" go run ./cmd/server --transport=sse --port=8085
 
-# Run in STDIO mode
+# STDIO mode
 DISCORD_TOKEN="your_bot_token" go run ./cmd/server --transport=stdio
 ```
 
