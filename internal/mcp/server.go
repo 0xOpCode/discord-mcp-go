@@ -19,7 +19,7 @@ type Server struct {
 func NewServer(client *discord.Client, optionalStore ...*storage.Store) *Server {
 	s := server.NewMCPServer(
 		"discord-mcp-go",
-		"1.1.0",
+		"1.2.0",
 		server.WithLogging(),
 		server.WithResourceCapabilities(true, true),
 	)
