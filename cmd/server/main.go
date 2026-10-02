@@ -19,6 +19,7 @@ func main() {
 	tokenFlag := flag.String("token", cfg.DiscordToken, "Discord Bot Token")
 	guildIDFlag := flag.String("guild-id", cfg.DefaultGuildID, "Default Discord Server (Guild) ID")
 	blacklistedFlag := flag.String("blacklisted-guilds", "", "Comma-separated list of blacklisted Guild IDs")
+	allowedPathsFlag := flag.String("allowed-file-paths", "", "Comma-separated list of allowed filesystem directories for file uploads")
 	flag.Parse()
 
 	token := *tokenFlag
@@ -44,10 +45,21 @@ func main() {
 		}
 	}
 
+	allowedPaths := cfg.AllowedFilePaths
+	if *allowedPathsFlag != "" {
+		for _, p := range strings.Split(*allowedPathsFlag, ",") {
+			trimmed := strings.TrimSpace(p)
+			if trimmed != "" {
+				allowedPaths = append(allowedPaths, trimmed)
+			}
+		}
+	}
+
 	discordClient, err := discord.NewClient(token, guildID, blacklisted)
 	if err != nil {
 		log.Fatalf("Discord initialization failed: %v", err)
 	}
+	discordClient.AllowedFilePaths = allowedPaths
 
 	log.Printf("Authenticated as Discord bot: %s (ID: %s)", discordClient.BotUser.Username, discordClient.BotUser.ID)
 

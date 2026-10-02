@@ -2,16 +2,18 @@ package discord
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 type Client struct {
-	Session        *discordgo.Session
-	DefaultGuildID string
-	BotUser        *discordgo.User
-	Blacklist      map[string]struct{}
+	Session          *discordgo.Session
+	DefaultGuildID   string
+	BotUser          *discordgo.User
+	Blacklist        map[string]struct{}
+	AllowedFilePaths []string
 }
 
 func NewClient(token, defaultGuildID string, blacklistedGuilds []string) (*Client, error) {
@@ -57,6 +59,28 @@ func (c *Client) IsBlacklisted(guildID string) bool {
 	}
 	_, found := c.Blacklist[guildID]
 	return found
+}
+
+func (c *Client) IsPathAllowed(filePath string) error {
+	if c == nil || len(c.AllowedFilePaths) == 0 {
+		return nil
+	}
+
+	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		return fmt.Errorf("invalid path: %w", err)
+	}
+	absPath = filepath.Clean(absPath)
+
+	for _, allowed := range c.AllowedFilePaths {
+		cleanAllowed := filepath.Clean(allowed)
+		rel, err := filepath.Rel(cleanAllowed, absPath)
+		if err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("access to file '%s' prohibited by allowed path configuration", filePath)
 }
 
 func (c *Client) CheckGuildAllowed(guildID string) error {

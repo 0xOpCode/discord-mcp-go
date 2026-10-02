@@ -128,7 +128,7 @@ func RegisterEventTools(s *server.MCPServer, client *discord.Client) {
 				}
 			}
 			if imageInput := getString(req.Params.Arguments, "image"); imageInput != "" {
-				fileBytes, fileName, err := readFileInput(imageInput, "cover.jpg")
+				fileBytes, fileName, err := readFileInput(imageInput, "cover.jpg", client.AllowedFilePaths)
 				if err == nil {
 					ext := "jpeg"
 					lower := strings.ToLower(fileName)
@@ -278,7 +278,7 @@ func RegisterEventTools(s *server.MCPServer, client *discord.Client) {
 				return errorResult(err), nil
 			}
 
-			fileBytes, fileName, err := readFileInput(imageInput, "cover.jpg")
+			fileBytes, fileName, err := readFileInput(imageInput, "cover.jpg", client.AllowedFilePaths)
 			if err != nil {
 				return errorResult(fmt.Errorf("invalid image: %w", err)), nil
 			}

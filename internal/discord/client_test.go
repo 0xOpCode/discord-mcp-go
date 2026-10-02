@@ -70,3 +70,31 @@ func TestResolveGuildID(t *testing.T) {
 		t.Fatal("expected error when no default guild and no override passed")
 	}
 }
+
+func TestClientIsPathAllowed(t *testing.T) {
+	client := &Client{}
+	if err := client.IsPathAllowed("/any/path/file.txt"); err != nil {
+		t.Fatalf("expected nil error when AllowedFilePaths is empty, got: %v", err)
+	}
+
+	clientRestricted := &Client{
+		AllowedFilePaths: []string{"/var/data", "/home/app/uploads"},
+	}
+
+	if err := clientRestricted.IsPathAllowed("/var/data/image.png"); err != nil {
+		t.Fatalf("expected /var/data/image.png to be allowed, got: %v", err)
+	}
+	if err := clientRestricted.IsPathAllowed("/home/app/uploads/docs/spec.pdf"); err != nil {
+		t.Fatalf("expected /home/app/uploads/docs/spec.pdf to be allowed, got: %v", err)
+	}
+
+	if err := clientRestricted.IsPathAllowed("/etc/passwd"); err == nil {
+		t.Fatal("expected /etc/passwd to be rejected")
+	}
+	if err := clientRestricted.IsPathAllowed("/var/data/../../etc/shadow"); err == nil {
+		t.Fatal("expected directory traversal to be rejected")
+	}
+	if err := clientRestricted.IsPathAllowed("/var/database/leaked.txt"); err == nil {
+		t.Fatal("expected /var/database to be rejected when only /var/data is allowed")
+	}
+}

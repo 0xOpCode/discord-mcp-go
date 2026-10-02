@@ -24,6 +24,7 @@
 - **Dual transport architecture**: Native HTTP Server-Sent Events (SSE) and standard input/output (stdio).
 - **Dynamic guild routing**: Manages all bot-joined Discord guilds through runtime `guildId` parameters and `DISCORD_GUILD_ID` defaults.
 - **Blacklist protection**: Configurable guild blacklist (`DISCORD_BLACKLISTED_GUILDS`) to protect private servers against unauthorized agent actions.
+- **Path confinement**: Allowed directory confinement (`DISCORD_ALLOWED_FILE_PATHS`) restricts filesystem reads during file uploads.
 - **Compound block execution**: Chained multi-action pipelines with variable interpolation via `run_pipeline`.
 - **Minimal container footprint**: Multi-stage Alpine container image under 18 MB.
 
@@ -274,6 +275,19 @@ Add under Connectors UI or via reverse proxy URL:
 - `update_role_connection`: Update application role connection platform and metadata.
 - `get_role_connection_metadata`: Inspect application role connection metadata configuration.
 - `update_role_connection_metadata`: Configure metadata records for verification rules.
+
+---
+
+## ⚙️ Configuration Reference
+
+| Environment Variable | CLI Flag | Default | Description |
+|---|---|---|---|
+| `DISCORD_TOKEN` | `-token` | *(Required)* | Bot token for Discord authentication |
+| `DISCORD_GUILD_ID` | `-guild-id` | `""` | Default guild ID for channel and event operations |
+| `DISCORD_BLACKLISTED_GUILDS` | `-blacklisted-guilds` | `""` | Comma-separated guild IDs to block |
+| `DISCORD_ALLOWED_FILE_PATHS` | `-allowed-file-paths` | `""` | Comma-separated allowed directories for file uploads |
+| `PORT` | `-port` | `8085` | HTTP port for SSE transport |
+| `TRANSPORT` | `-transport` | `sse` | Protocol transport: `sse` or `stdio` |
 
 ---
 

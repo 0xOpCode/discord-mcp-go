@@ -124,7 +124,7 @@ func TestReadFileInput(t *testing.T) {
 	}
 	tmpFile.Close()
 
-	data, name, err := readFileInput(tmpFile.Name(), "")
+	data, name, err := readFileInput(tmpFile.Name(), "", nil)
 	if err != nil {
 		t.Fatalf("readFileInput failed: %v", err)
 	}
@@ -136,7 +136,7 @@ func TestReadFileInput(t *testing.T) {
 	}
 
 	dataURI := "data:text/plain;base64,aGVsbG8="
-	uriData, uriName, err := readFileInput(dataURI, "")
+	uriData, uriName, err := readFileInput(dataURI, "", nil)
 	if err != nil {
 		t.Fatalf("data URI decode failed: %v", err)
 	}
@@ -145,5 +145,26 @@ func TestReadFileInput(t *testing.T) {
 	}
 	if uriName != "attachment.txt" {
 		t.Fatalf("expected attachment.txt, got %s", uriName)
+	}
+
+	allowedDir := os.TempDir()
+	_, _, errAllowed := readFileInput(tmpFile.Name(), "", []string{allowedDir})
+	if errAllowed != nil {
+		t.Fatalf("expected file in %s to be allowed, got: %v", allowedDir, errAllowed)
+	}
+
+	_, _, errForbidden := readFileInput(tmpFile.Name(), "", []string{"/var/restricted/uploads"})
+	if errForbidden == nil {
+		t.Fatal("expected file outside allowed directories to be rejected")
+	}
+
+	_, _, errTraversal := readFileInput(tmpFile.Name()+"/../../etc/passwd", "", []string{allowedDir})
+	if errTraversal == nil {
+		t.Fatal("expected path traversal to be rejected")
+	}
+
+	uriDataRestricted, _, errUriRestricted := readFileInput(dataURI, "", []string{"/var/restricted/uploads"})
+	if errUriRestricted != nil || string(uriDataRestricted) != "hello" {
+		t.Fatalf("expected data URI to work with path restriction: %v", errUriRestricted)
 	}
 }
