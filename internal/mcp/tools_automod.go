@@ -42,7 +42,11 @@ func RegisterAutoModTools(s *server.MCPServer, client *discord.Client) {
 				if len(name) > 25 {
 					name = name[:22] + "..."
 				}
-				sb.WriteString(fmt.Sprintf("| %-25s | %-20s | %-12d | %-8t |\n", name, r.ID, r.TriggerType, r.Enabled))
+				enabled := false
+				if r.Enabled != nil {
+					enabled = *r.Enabled
+				}
+				sb.WriteString(fmt.Sprintf("| %-25s | %-20s | %-12d | %-8t |\n", name, r.ID, r.TriggerType, enabled))
 			}
 			return successResult(sb.String()), nil
 		},
