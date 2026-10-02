@@ -37,6 +37,7 @@ func RegisterCustomResourceTools(s *server.MCPServer, store *storage.Store) {
 			if err := store.Save(item); err != nil {
 				return errorResult(fmt.Errorf("failed to save resource: %w", err)), nil
 			}
+			RegisterMemoryResource(s, item.Key, item.Description, item.MimeType, HandleMemoryRead(store))
 			return successResult(fmt.Sprintf("Resource `%s` saved. URI: `discord://memory/%s`", key, key)), nil
 		},
 	)
