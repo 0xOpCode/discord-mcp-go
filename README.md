@@ -280,6 +280,10 @@ Add under Connectors UI or via reverse proxy URL:
 - `ask_user`: Ask the human user a question or approval request via Discord DM and wait for their response, with configurable timeout and attachment support.
 
 ### Native MCP Resources
+- `discord://guide/overview`: System architecture, capabilities, transport modes, and operating principles.
+- `discord://guide/tools`: Directory and tool selection rules across all 113 tools and 18 domains.
+- `discord://guide/pipelines`: Pipeline DSL manual, variable interpolation syntax, and multi-step recipes.
+- `discord://guide/best-practices`: Autonomous agent protocols for context discovery, batching, and human confirmation gating.
 - `discord://memory/{key}`: Read persistent custom memory documents stored in local storage.
 - `discord://guilds/{guildId}/overview`: Inspect guild metadata, member count, and channel list.
 - `discord://guilds/{guildId}/roles`: List server roles, colors, positions, and permission bitmasks.

@@ -378,6 +378,34 @@ func RegisterResources(s *server.MCPServer, client *discord.Client, store *stora
 			guildRolesHandler,
 		)
 	}
+
+	// Register embedded agent guides
+	registerGuideResource := func(uri, name, description, content string) {
+		s.AddResource(
+			mcp.NewResource(
+				uri,
+				name,
+				mcp.WithResourceDescription(description),
+				mcp.WithMIMEType("text/markdown"),
+			),
+			func(ctx context.Context, req mcp.ReadResourceRequest) ([]interface{}, error) {
+				return []interface{}{
+					mcp.TextResourceContents{
+						ResourceContents: mcp.ResourceContents{
+							URI:      uri,
+							MIMEType: "text/markdown",
+						},
+						Text: content,
+					},
+				}, nil
+			},
+		)
+	}
+
+	registerGuideResource("discord://guide/overview", "Guide: System Overview", "Architecture, transport options, storage, and collaboration protocols", GuideOverview)
+	registerGuideResource("discord://guide/tools", "Guide: Tool Directory", "Categorized index and selection rules for all 113 tools", GuideTools)
+	registerGuideResource("discord://guide/pipelines", "Guide: Pipeline Manual & Recipes", "Pipeline specification, template interpolation, and compound action recipes", GuidePipelines)
+	registerGuideResource("discord://guide/best-practices", "Guide: Agent Best Practices", "Operating protocols: resource inspection, batch execution, and human confirmation gating", GuideBestPractices)
 }
 
 func RegisterMemoryResource(s *server.MCPServer, key, description, mimeType string, handler server.ResourceHandlerFunc) {
