@@ -271,4 +271,85 @@ func RegisterChannelTools(s *server.MCPServer, client *discord.Client) {
 			return successResult(fmt.Sprintf("Channel `%s` moved successfully.", ch.Name)), nil
 		},
 	)
+
+	// create_thread
+	s.AddTool(
+		mcp.NewTool("create_thread",
+			mcp.WithDescription("Create a new thread in a text channel"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID to create thread in")),
+			mcp.WithString("name", mcp.Required(), mcp.Description("Thread title name")),
+			mcp.WithNumber("autoArchiveDuration", mcp.Description("Auto-archive duration in minutes (60, 1440, 4320, 10080, default 1440)")),
+			mcp.WithString("type", mcp.Description("Thread type: 'public' or 'private' (default: public)")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			name := getString(req.Params.Arguments, "name")
+			if channelID == "" || name == "" {
+				return errorResult(fmt.Errorf("channelId and name are required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			duration := getInt(req.Params.Arguments, "autoArchiveDuration", 1440)
+			tType := discordgo.ChannelTypeGuildPublicThread
+			if strings.ToLower(getString(req.Params.Arguments, "type")) == "private" {
+				tType = discordgo.ChannelTypeGuildPrivateThread
+			}
+
+			data := &discordgo.ThreadStart{
+				Name:                name,
+				AutoArchiveDuration: duration,
+				Type:                tType,
+			}
+
+			thread, err := client.Session.ThreadStartComplex(channelID, data)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to create thread: %w", err)), nil
+			}
+
+			return successResult(fmt.Sprintf("Thread `%s` created. ID: `%s`", thread.Name, thread.ID)), nil
+		},
+	)
+
+	// list_threads
+	s.AddTool(
+		mcp.NewTool("list_threads",
+			mcp.WithDescription("List active threads in a text channel"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			if channelID == "" {
+				return errorResult(fmt.Errorf("channelId is required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			threadsList, err := client.Session.ThreadsActive(channelID)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to fetch active threads: %w", err)), nil
+			}
+
+			if len(threadsList.Threads) == 0 {
+				return successResult(fmt.Sprintf("No active threads in channel `%s`.", channelID)), nil
+			}
+
+			var sb strings.Builder
+			sb.WriteString(fmt.Sprintf("### Active Threads in Channel `%s` (%d total):\n\n", channelID, len(threadsList.Threads)))
+			sb.WriteString(fmt.Sprintf("| %-28s | %-20s | %-8s |\n", "Thread Name", "Thread ID", "Messages"))
+			sb.WriteString("|------------------------------|----------------------|----------|\n")
+			for _, th := range threadsList.Threads {
+				threadName := th.Name
+				if len(threadName) > 28 {
+					threadName = threadName[:25] + "..."
+				}
+				sb.WriteString(fmt.Sprintf("| %-28s | %-20s | %-8d |\n", threadName, th.ID, th.MessageCount))
+			}
+			return successResult(sb.String()), nil
+		},
+	)
 }
