@@ -15,7 +15,7 @@
 
 ## Overview
 
-`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 108 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
+`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 112 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, custom persistent resources, and multi-action block pipelines.
 
 ### Core Capabilities
 
@@ -128,7 +128,7 @@ Add under Connectors UI or via reverse proxy URL:
 
 ---
 
-## 🛠️ Complete Tool Directory (108 Tools)
+## 🛠️ Complete Tool Directory (112 Tools)
 
 ### Compound Workflows & Pipelines
 - `run_pipeline`: Execute a sequence of MCP actions as connected blocks with variable reference interpolation (e.g. `{{step1.id}}`) in a single network round-trip.
@@ -276,6 +276,12 @@ Add under Connectors UI or via reverse proxy URL:
 - `get_role_connection_metadata`: Inspect application role connection metadata configuration.
 - `update_role_connection_metadata`: Configure metadata records for verification rules.
 
+### Persistent Custom Resources
+- `save_custom_resource`: Store custom notes, runbooks, owner identity, or state under `discord://memory/{key}`.
+- `get_custom_resource`: Retrieve stored persistent resources by key or URI.
+- `delete_custom_resource`: Remove stored persistent resources.
+- `list_custom_resources`: Enumerate all persistent custom resources stored on disk.
+
 ---
 
 ## ⚙️ Configuration Reference
@@ -286,6 +292,7 @@ Add under Connectors UI or via reverse proxy URL:
 | `DISCORD_GUILD_ID` | `-guild-id` | `""` | Default guild ID for channel and event operations |
 | `DISCORD_BLACKLISTED_GUILDS` | `-blacklisted-guilds` | `""` | Comma-separated guild IDs to block |
 | `DISCORD_ALLOWED_FILE_PATHS` | `-allowed-file-paths` | `""` | Comma-separated allowed directories for file uploads |
+| `DISCORD_DATA_DIR` | `-data-dir` | `~/.config/discord-mcp-go` | Directory path for persistent custom resources storage |
 | `PORT` | `-port` | `8085` | HTTP port for SSE transport |
 | `TRANSPORT` | `-transport` | `sse` | Protocol transport: `sse` or `stdio` |
 

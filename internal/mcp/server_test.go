@@ -54,6 +54,10 @@ func TestRegisteredToolsCount(t *testing.T) {
 		"pin_message",
 		"unpin_message",
 		"crosspost_message",
+		"save_custom_resource",
+		"get_custom_resource",
+		"delete_custom_resource",
+		"list_custom_resources",
 	}
 
 	for _, name := range expectedTools {
@@ -62,8 +66,8 @@ func TestRegisteredToolsCount(t *testing.T) {
 		}
 	}
 
-	if toolCount != 108 {
-		t.Fatalf("expected 108 tools, got %d", toolCount)
+	if toolCount != 112 {
+		t.Fatalf("expected 112 tools, got %d", toolCount)
 	}
 }
 
