@@ -32,6 +32,8 @@ func NewServer(client *discord.Client) *Server {
 	RegisterWebhookTools(s, client)
 	RegisterEventTools(s, client)
 	RegisterInviteTools(s, client)
+	RegisterForumTools(s, client)
+	RegisterEmojiTools(s, client)
 
 	return &Server{
 		MCPServer: s,
