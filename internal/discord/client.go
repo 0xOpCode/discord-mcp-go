@@ -14,6 +14,7 @@ type Client struct {
 	BotUser          *discordgo.User
 	Blacklist        map[string]struct{}
 	AllowedFilePaths []string
+	OwnerUserID      string
 }
 
 func NewClient(token, defaultGuildID string, blacklistedGuilds []string) (*Client, error) {

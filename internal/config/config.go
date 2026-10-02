@@ -13,6 +13,7 @@ type Config struct {
 	Transport         string
 	BlacklistedGuilds []string
 	AllowedFilePaths  []string
+	OwnerUserID       string
 }
 
 func Load() *Config {
@@ -57,5 +58,6 @@ func Load() *Config {
 		Transport:         transport,
 		BlacklistedGuilds: blacklisted,
 		AllowedFilePaths:  allowedPaths,
+		OwnerUserID:       os.Getenv("DISCORD_OWNER_USER_ID"),
 	}
 }

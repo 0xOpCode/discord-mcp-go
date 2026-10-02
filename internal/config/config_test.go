@@ -23,6 +23,9 @@ func TestConfigLoadDefaults(t *testing.T) {
 	if len(cfg.AllowedFilePaths) != 0 {
 		t.Fatalf("expected empty allowed file paths, got %v", cfg.AllowedFilePaths)
 	}
+	if cfg.OwnerUserID != "" {
+		t.Fatalf("expected empty owner user id, got %s", cfg.OwnerUserID)
+	}
 }
 
 func TestConfigLoadCustomEnv(t *testing.T) {
@@ -32,6 +35,7 @@ func TestConfigLoadCustomEnv(t *testing.T) {
 	os.Setenv("DISCORD_GUILD_ID", "1122334455")
 	os.Setenv("DISCORD_BLACKLISTED_GUILDS", "111, 222 , 333")
 	os.Setenv("DISCORD_ALLOWED_FILE_PATHS", "/tmp, /var/log")
+	os.Setenv("DISCORD_OWNER_USER_ID", "9988776655")
 	defer os.Clearenv()
 
 	cfg := Load()
@@ -47,6 +51,9 @@ func TestConfigLoadCustomEnv(t *testing.T) {
 	}
 	if cfg.DefaultGuildID != "1122334455" {
 		t.Fatalf("expected guild id 1122334455, got %s", cfg.DefaultGuildID)
+	}
+	if cfg.OwnerUserID != "9988776655" {
+		t.Fatalf("expected owner user id 9988776655, got %s", cfg.OwnerUserID)
 	}
 
 	expectedBlacklist := []string{"111", "222", "333"}
