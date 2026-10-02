@@ -230,4 +230,62 @@ func RegisterModerationTools(s *server.MCPServer, client *discord.Client) {
 			return successResult(sb.String()), nil
 		},
 	)
+
+	// estimate_prune
+	s.AddTool(
+		mcp.NewTool("estimate_prune",
+			mcp.WithDescription("Estimate how many inactive members would be pruned after a number of days"),
+			mcp.WithNumber("days", mcp.Description("Days of inactivity (1-30, default 7)")),
+			mcp.WithString("guildId", mcp.Description("Optional Discord Server ID")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			guildID, err := client.ResolveGuildID(getString(req.Params.Arguments, "guildId"))
+			if err != nil {
+				return errorResult(err), nil
+			}
+
+			days := getInt(req.Params.Arguments, "days", 7)
+			if days < 1 {
+				days = 1
+			} else if days > 30 {
+				days = 30
+			}
+
+			count, err := client.Session.GuildPruneCount(guildID, uint32(days))
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to estimate prune count: %w", err)), nil
+			}
+
+			return successResult(fmt.Sprintf("Prune estimate for server `%s`: %d members would be removed (inactivity threshold: %d days).", guildID, count, days)), nil
+		},
+	)
+
+	// prune_members
+	s.AddTool(
+		mcp.NewTool("prune_members",
+			mcp.WithDescription("Prune (kick) inactive members from a server"),
+			mcp.WithNumber("days", mcp.Description("Days of inactivity (1-30, default 7)")),
+			mcp.WithString("guildId", mcp.Description("Optional Discord Server ID")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			guildID, err := client.ResolveGuildID(getString(req.Params.Arguments, "guildId"))
+			if err != nil {
+				return errorResult(err), nil
+			}
+
+			days := getInt(req.Params.Arguments, "days", 7)
+			if days < 1 {
+				days = 1
+			} else if days > 30 {
+				days = 30
+			}
+
+			count, err := client.Session.GuildPrune(guildID, uint32(days))
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to prune members: %w", err)), nil
+			}
+
+			return successResult(fmt.Sprintf("Successfully pruned %d inactive members from server `%s` (inactivity: %d days).", count, guildID, days)), nil
+		},
+	)
 }
