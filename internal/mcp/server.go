@@ -39,6 +39,7 @@ func NewServer(client *discord.Client) *Server {
 	RegisterSoundboardTools(s, client)
 	RegisterStickerTools(s, client)
 	RegisterRoleConnectionTools(s, client)
+	RegisterPipelineTools(s, client)
 
 	return &Server{
 		MCPServer: s,
