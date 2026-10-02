@@ -245,4 +245,63 @@ func RegisterUserTools(s *server.MCPServer, client *discord.Client) {
 			return successResult(fmt.Sprintf("File `%s` sent to user `%s` in DM. Message ID: `%s`", fileName, userID, msg.ID)), nil
 		},
 	)
+
+	// list_guild_members
+	s.AddTool(
+		mcp.NewTool("list_guild_members",
+			mcp.WithDescription("List members in a Discord server with roles and joined timestamps"),
+			mcp.WithString("guildId", mcp.Description("Optional Discord Server ID")),
+			mcp.WithNumber("limit", mcp.Description("Number of members to fetch (1-1000, default 100)")),
+			mcp.WithString("after", mcp.Description("User ID cursor for pagination")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			guildID, err := client.ResolveGuildID(getString(req.Params.Arguments, "guildId"))
+			if err != nil {
+				return errorResult(err), nil
+			}
+
+			limit := getInt(req.Params.Arguments, "limit", 100)
+			if limit < 1 {
+				limit = 1
+			} else if limit > 1000 {
+				limit = 1000
+			}
+
+			after := getString(req.Params.Arguments, "after")
+			members, err := client.Session.GuildMembers(guildID, after, limit)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to fetch guild members: %w", err)), nil
+			}
+
+			if len(members) == 0 {
+				return successResult(fmt.Sprintf("No members returned for server `%s`.", guildID)), nil
+			}
+
+			var sb strings.Builder
+			sb.WriteString(fmt.Sprintf("### Server Members in `%s` (%d returned):\n\n", guildID, len(members)))
+			sb.WriteString(fmt.Sprintf("| %-22s | %-20s | %-20s | %-6s |\n", "Username", "Nickname", "User ID", "Roles"))
+			sb.WriteString("|------------------------|----------------------|----------------------|--------|\n")
+			for _, m := range members {
+				username := "Unknown"
+				userID := "N/A"
+				if m.User != nil {
+					username = m.User.Username
+					userID = m.User.ID
+				}
+				if len(username) > 22 {
+					username = username[:19] + "..."
+				}
+				nick := m.Nick
+				if nick == "" {
+					nick = "-"
+				}
+				if len(nick) > 20 {
+					nick = nick[:17] + "..."
+				}
+				sb.WriteString(fmt.Sprintf("| %-22s | %-20s | %-20s | %-6d |\n", username, nick, userID, len(m.Roles)))
+			}
+
+			return successResult(sb.String()), nil
+		},
+	)
 }
