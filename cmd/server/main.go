@@ -20,6 +20,7 @@ func main() {
 	guildIDFlag := flag.String("guild-id", cfg.DefaultGuildID, "Default Discord Server (Guild) ID")
 	blacklistedFlag := flag.String("blacklisted-guilds", "", "Comma-separated list of blacklisted Guild IDs")
 	allowedPathsFlag := flag.String("allowed-file-paths", "", "Comma-separated list of allowed filesystem directories for file uploads")
+	ownerUserIDFlag := flag.String("owner-user-id", cfg.OwnerUserID, "Optional Discord Owner User ID for interactive prompts")
 	flag.Parse()
 
 	token := *tokenFlag
@@ -60,6 +61,9 @@ func main() {
 		log.Fatalf("Discord initialization failed: %v", err)
 	}
 	discordClient.AllowedFilePaths = allowedPaths
+	if *ownerUserIDFlag != "" {
+		discordClient.OwnerUserID = strings.TrimSpace(*ownerUserIDFlag)
+	}
 
 	log.Printf("Authenticated as Discord bot: %s (ID: %s)", discordClient.BotUser.Username, discordClient.BotUser.ID)
 

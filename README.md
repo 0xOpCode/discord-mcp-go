@@ -15,7 +15,7 @@
 
 ## Overview
 
-`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 112 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, custom persistent resources, and multi-action block pipelines.
+`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 113 granular tools and native MCP resource templates covering Discord server administration, human-in-the-loop collaboration (`ask_user`), moderation, channel operations, polls, stickers, soundboard clips, messaging, custom persistent memory resources, and multi-action block pipelines.
 
 ### Core Capabilities
 
@@ -128,7 +128,7 @@ Add under Connectors UI or via reverse proxy URL:
 
 ---
 
-## 🛠️ Complete Tool Directory (112 Tools)
+## 🛠️ Complete Tool Directory (113 Tools)
 
 ### Compound Workflows & Pipelines
 - `run_pipeline`: Execute a sequence of MCP actions as connected blocks with variable reference interpolation (e.g. `{{step1.id}}`) in a single network round-trip.
@@ -276,6 +276,16 @@ Add under Connectors UI or via reverse proxy URL:
 - `get_role_connection_metadata`: Inspect application role connection metadata configuration.
 - `update_role_connection_metadata`: Configure metadata records for verification rules.
 
+### Interactive Human Collaboration
+- `ask_user`: Ask the human user a question or approval request via Discord DM and wait for their response, with configurable timeout and attachment support.
+
+### Native MCP Resources
+- `discord://memory/{key}`: Read persistent custom memory documents stored in local storage.
+- `discord://guilds/{guildId}/overview`: Inspect guild metadata, member count, and channel list.
+- `discord://guilds/{guildId}/roles`: List server roles, colors, positions, and permission bitmasks.
+- `discord://channels/{channelId}/pinned`: Retrieve pinned messages and attachments in a channel.
+- `discord://channels/{channelId}/recent`: Read recent 50 messages formatted in clean markdown.
+
 ### Persistent Custom Resources
 - `save_custom_resource`: Store custom notes, runbooks, owner identity, or state under `discord://memory/{key}`.
 - `get_custom_resource`: Retrieve stored persistent resources by key or URI.
@@ -290,6 +300,7 @@ Add under Connectors UI or via reverse proxy URL:
 |---|---|---|---|
 | `DISCORD_TOKEN` | `-token` | *(Required)* | Bot token for Discord authentication |
 | `DISCORD_GUILD_ID` | `-guild-id` | `""` | Default guild ID for channel and event operations |
+| `DISCORD_OWNER_USER_ID` | `-owner-user-id` | `""` | Optional Discord User ID for interactive prompts (`ask_user`) |
 | `DISCORD_BLACKLISTED_GUILDS` | `-blacklisted-guilds` | `""` | Comma-separated guild IDs to block |
 | `DISCORD_ALLOWED_FILE_PATHS` | `-allowed-file-paths` | `""` | Comma-separated allowed directories for file uploads |
 | `DISCORD_DATA_DIR` | `-data-dir` | `~/.config/discord-mcp-go` | Directory path for persistent custom resources storage |

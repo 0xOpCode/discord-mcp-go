@@ -57,6 +57,7 @@ func NewServer(client *discord.Client, optionalStore ...*storage.Store) *Server 
 	RegisterRoleConnectionTools(s, client)
 	RegisterPipelineTools(s, client)
 	RegisterCustomResourceTools(s, store)
+	RegisterCollaborationTools(s, client, store)
 
 	return &Server{
 		MCPServer: s,
