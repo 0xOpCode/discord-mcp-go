@@ -20,6 +20,9 @@ func TestConfigLoadDefaults(t *testing.T) {
 	if len(cfg.BlacklistedGuilds) != 0 {
 		t.Fatalf("expected empty blacklisted guilds, got %v", cfg.BlacklistedGuilds)
 	}
+	if len(cfg.AllowedFilePaths) != 0 {
+		t.Fatalf("expected empty allowed file paths, got %v", cfg.AllowedFilePaths)
+	}
 }
 
 func TestConfigLoadCustomEnv(t *testing.T) {
@@ -28,6 +31,7 @@ func TestConfigLoadCustomEnv(t *testing.T) {
 	os.Setenv("DISCORD_TOKEN", "test-token-xyz")
 	os.Setenv("DISCORD_GUILD_ID", "1122334455")
 	os.Setenv("DISCORD_BLACKLISTED_GUILDS", "111, 222 , 333")
+	os.Setenv("DISCORD_ALLOWED_FILE_PATHS", "/tmp, /var/log")
 	defer os.Clearenv()
 
 	cfg := Load()
@@ -48,5 +52,9 @@ func TestConfigLoadCustomEnv(t *testing.T) {
 	expectedBlacklist := []string{"111", "222", "333"}
 	if !reflect.DeepEqual(cfg.BlacklistedGuilds, expectedBlacklist) {
 		t.Fatalf("expected blacklist %v, got %v", expectedBlacklist, cfg.BlacklistedGuilds)
+	}
+
+	if len(cfg.AllowedFilePaths) != 2 || cfg.AllowedFilePaths[0] != "/tmp" || cfg.AllowedFilePaths[1] != "/var/log" {
+		t.Fatalf("expected allowed file paths [/tmp /var/log], got %v", cfg.AllowedFilePaths)
 	}
 }

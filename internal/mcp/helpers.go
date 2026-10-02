@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-func readFileInput(input, defaultName string) ([]byte, string, error) {
+func readFileInput(input, defaultName string, allowedPaths []string) ([]byte, string, error) {
 	cleanInput := strings.TrimSpace(input)
 	if cleanInput == "" {
 		return nil, "", fmt.Errorf("file path or base64 data required")
@@ -50,6 +50,37 @@ func readFileInput(input, defaultName string) ([]byte, string, error) {
 			name = "attachment." + ext
 		}
 		return raw, name, nil
+	}
+
+	if len(allowedPaths) > 0 {
+		absPath, err := filepath.Abs(cleanInput)
+		if err != nil {
+			return nil, "", fmt.Errorf("invalid path: %w", err)
+		}
+		absPath = filepath.Clean(absPath)
+
+		allowed := false
+		for _, dir := range allowedPaths {
+			cleanDir := filepath.Clean(dir)
+			rel, relErr := filepath.Rel(cleanDir, absPath)
+			if relErr == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+				allowed = true
+				break
+			}
+		}
+
+		if !allowed {
+			if !strings.Contains(cleanInput, "/") && !strings.Contains(cleanInput, "\\") {
+				if raw, err := base64.StdEncoding.DecodeString(cleanInput); err == nil {
+					name := defaultName
+					if name == "" {
+						name = "attachment.bin"
+					}
+					return raw, name, nil
+				}
+			}
+			return nil, "", fmt.Errorf("access to file '%s' prohibited by allowed path configuration", cleanInput)
+		}
 	}
 
 	if data, err := os.ReadFile(cleanInput); err == nil {

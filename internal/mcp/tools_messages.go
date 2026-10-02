@@ -353,7 +353,7 @@ func RegisterMessageTools(s *server.MCPServer, client *discord.Client) {
 			}
 
 			customName := getString(req.Params.Arguments, "fileName")
-			fileBytes, fileName, err := readFileInput(filePath, customName)
+			fileBytes, fileName, err := readFileInput(filePath, customName, client.AllowedFilePaths)
 			if err != nil {
 				return errorResult(fmt.Errorf("invalid file: %w", err)), nil
 			}
