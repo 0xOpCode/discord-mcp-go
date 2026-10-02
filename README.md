@@ -13,7 +13,7 @@
 
 ## Overview
 
-`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 97 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
+`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 100 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
 
 ### Core Capabilities
 
@@ -113,7 +113,7 @@ Add under Connectors UI or via reverse proxy URL:
 
 ---
 
-## 🛠️ Complete Tool Directory (97 Tools)
+## 🛠️ Complete Tool Directory (100 Tools)
 
 ### Compound Workflows & Pipelines
 - `run_pipeline`: Execute a sequence of MCP actions as connected blocks with variable reference interpolation (e.g. `{{step1.id}}`) in a single network round-trip.
@@ -127,6 +127,8 @@ Add under Connectors UI or via reverse proxy URL:
 
 ### Message Management
 - `send_message`: Post text messages to specific channels.
+- `get_message`: Fetch a specific message by channel ID and message ID.
+- `send_file`: Upload files or attachments (images, PDFs, documents) to a text channel.
 - `edit_message`: Edit bot-authored messages.
 - `delete_message`: Remove messages from channels.
 - `read_messages`: Paginated retrieval of channel history (cursor support: before, after, around).
@@ -137,6 +139,7 @@ Add under Connectors UI or via reverse proxy URL:
 ### Users & Direct Messages
 - `get_user_id_by_name`: Resolve usernames or server nicknames to user IDs.
 - `send_private_message`: Open DM channels and message users.
+- `send_private_file`: Upload files or attachments directly to a user in DM.
 - `edit_private_message`: Edit sent direct messages.
 - `delete_private_message`: Delete sent direct messages.
 - `read_private_messages`: Retrieve direct message history.

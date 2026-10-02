@@ -1,11 +1,13 @@
 package mcp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
 
 	"github.com/0xOpCode/discord-mcp-go/internal/discord"
+	"github.com/bwmarrin/discordgo"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -194,6 +196,53 @@ func RegisterUserTools(s *server.MCPServer, client *discord.Client) {
 				))
 			}
 			return successResult(sb.String()), nil
+		},
+	)
+
+	// send_private_file
+	s.AddTool(
+		mcp.NewTool("send_private_file",
+			mcp.WithDescription("Upload a file or attachment to a user's direct private message (DM)"),
+			mcp.WithString("userId", mcp.Required(), mcp.Description("Target user ID")),
+			mcp.WithString("filePath", mcp.Required(), mcp.Description("Local file path or base64 data URI")),
+			mcp.WithString("content", mcp.Description("Optional message text accompanying file")),
+			mcp.WithString("fileName", mcp.Description("Optional custom file name")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			userID := getString(req.Params.Arguments, "userId")
+			filePath := getString(req.Params.Arguments, "filePath")
+			if userID == "" || filePath == "" {
+				return errorResult(fmt.Errorf("userId and filePath are required")), nil
+			}
+
+			dmChannel, err := client.Session.UserChannelCreate(userID)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to open DM channel: %w", err)), nil
+			}
+
+			customName := getString(req.Params.Arguments, "fileName")
+			fileBytes, fileName, err := readFileInput(filePath, customName)
+			if err != nil {
+				return errorResult(fmt.Errorf("invalid file: %w", err)), nil
+			}
+
+			content := getString(req.Params.Arguments, "content")
+			msgSend := &discordgo.MessageSend{
+				Content: content,
+				Files: []*discordgo.File{
+					{
+						Name:   fileName,
+						Reader: bytes.NewReader(fileBytes),
+					},
+				},
+			}
+
+			msg, err := client.Session.ChannelMessageSendComplex(dmChannel.ID, msgSend)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to send file in DM: %w", err)), nil
+			}
+
+			return successResult(fmt.Sprintf("File `%s` sent to user `%s` in DM. Message ID: `%s`", fileName, userID, msg.ID)), nil
 		},
 	)
 }
