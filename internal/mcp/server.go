@@ -21,6 +21,7 @@ func NewServer(client *discord.Client, optionalStore ...*storage.Store) *Server 
 		"discord-mcp-go",
 		"1.1.0",
 		server.WithLogging(),
+		server.WithResourceCapabilities(true, true),
 	)
 
 	var store *storage.Store
@@ -34,6 +35,7 @@ func NewServer(client *discord.Client, optionalStore ...*storage.Store) *Server 
 		}
 	}
 
+	RegisterResources(s, client, store)
 	RegisterServerTools(s, client)
 	RegisterMessageTools(s, client)
 	RegisterUserTools(s, client)
