@@ -15,7 +15,7 @@
 
 ## Overview
 
-`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 104 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
+`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 108 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
 
 ### Core Capabilities
 
@@ -127,7 +127,7 @@ Add under Connectors UI or via reverse proxy URL:
 
 ---
 
-## 🛠️ Complete Tool Directory (104 Tools)
+## 🛠️ Complete Tool Directory (108 Tools)
 
 ### Compound Workflows & Pipelines
 - `run_pipeline`: Execute a sequence of MCP actions as connected blocks with variable reference interpolation (e.g. `{{step1.id}}`) in a single network round-trip.
@@ -148,6 +148,10 @@ Add under Connectors UI or via reverse proxy URL:
 - `delete_message`: Remove messages from channels.
 - `read_messages`: Paginated retrieval of channel history (cursor support: before, after, around).
 - `purge_messages`: Bulk delete up to 100 recent messages from a channel.
+- `list_pinned_messages`: List pinned messages in a channel.
+- `pin_message`: Pin a message in a channel.
+- `unpin_message`: Unpin a message from a channel.
+- `crosspost_message`: Publish an announcement message to follower channels.
 - `add_reaction`: Add reactions using unicode or custom emojis.
 - `remove_reaction`: Remove bot reactions from messages.
 

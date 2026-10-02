@@ -478,4 +478,135 @@ func RegisterMessageTools(s *server.MCPServer, client *discord.Client) {
 			return successResult(sb.String()), nil
 		},
 	)
+
+	// list_pinned_messages
+	s.AddTool(
+		mcp.NewTool("list_pinned_messages",
+			mcp.WithDescription("List all pinned messages in a channel"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			if channelID == "" {
+				return errorResult(fmt.Errorf("channelId is required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			messages, err := client.Session.ChannelMessagesPinned(channelID)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to fetch pinned messages: %w", err)), nil
+			}
+
+			if len(messages) == 0 {
+				return successResult("No pinned messages found in channel."), nil
+			}
+
+			var sb strings.Builder
+			sb.WriteString(fmt.Sprintf("### Pinned Messages in Channel `%s` (%d total):\n\n", channelID, len(messages)))
+			sb.WriteString(fmt.Sprintf("| %-20s | %-20s | %-20s | %-30s |\n", "Author", "Message ID", "Timestamp", "Content Preview"))
+			sb.WriteString("|----------------------|----------------------|----------------------|--------------------------------|\n")
+
+			for _, m := range messages {
+				author := "Unknown"
+				if m.Author != nil {
+					author = m.Author.Username
+				}
+				if len(author) > 20 {
+					author = author[:17] + "..."
+				}
+
+				preview := strings.ReplaceAll(m.Content, "\n", " ")
+				if len(preview) > 30 {
+					preview = preview[:27] + "..."
+				}
+				if preview == "" && len(m.Attachments) > 0 {
+					preview = fmt.Sprintf("[%d attachments]", len(m.Attachments))
+				}
+
+				timestamp := m.Timestamp.Format("2006-01-02 15:04:05")
+				sb.WriteString(fmt.Sprintf("| %-20s | %-20s | %-20s | %-30s |\n", author, m.ID, timestamp, preview))
+			}
+
+			return successResult(sb.String()), nil
+		},
+	)
+
+	// pin_message
+	s.AddTool(
+		mcp.NewTool("pin_message",
+			mcp.WithDescription("Pin a message in a channel"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID")),
+			mcp.WithString("messageId", mcp.Required(), mcp.Description("Message ID to pin")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			messageID := getString(req.Params.Arguments, "messageId")
+			if channelID == "" || messageID == "" {
+				return errorResult(fmt.Errorf("channelId and messageId are required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			if err := client.Session.ChannelMessagePin(channelID, messageID); err != nil {
+				return errorResult(fmt.Errorf("failed to pin message: %w", err)), nil
+			}
+			return successResult(fmt.Sprintf("Message `%s` pinned in channel `%s`.", messageID, channelID)), nil
+		},
+	)
+
+	// unpin_message
+	s.AddTool(
+		mcp.NewTool("unpin_message",
+			mcp.WithDescription("Unpin a message from a channel"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID")),
+			mcp.WithString("messageId", mcp.Required(), mcp.Description("Message ID to unpin")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			messageID := getString(req.Params.Arguments, "messageId")
+			if channelID == "" || messageID == "" {
+				return errorResult(fmt.Errorf("channelId and messageId are required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			if err := client.Session.ChannelMessageUnpin(channelID, messageID); err != nil {
+				return errorResult(fmt.Errorf("failed to unpin message: %w", err)), nil
+			}
+			return successResult(fmt.Sprintf("Message `%s` unpinned from channel `%s`.", messageID, channelID)), nil
+		},
+	)
+
+	// crosspost_message
+	s.AddTool(
+		mcp.NewTool("crosspost_message",
+			mcp.WithDescription("Publish an announcement message to all follower channels"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID containing announcement")),
+			mcp.WithString("messageId", mcp.Required(), mcp.Description("Message ID to crosspost")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			messageID := getString(req.Params.Arguments, "messageId")
+			if channelID == "" || messageID == "" {
+				return errorResult(fmt.Errorf("channelId and messageId are required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			msg, err := client.Session.ChannelMessageCrosspost(channelID, messageID)
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to crosspost message: %w", err)), nil
+			}
+			return successResult(fmt.Sprintf("Message `%s` published to follower channels.", msg.ID)), nil
+		},
+	)
 }
