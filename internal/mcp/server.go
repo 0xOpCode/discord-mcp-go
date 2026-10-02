@@ -3,6 +3,7 @@ package mcp
 import (
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/0xOpCode/discord-mcp-go/internal/discord"
 	"github.com/mark3labs/mcp-go/server"
@@ -56,8 +57,12 @@ func (s *Server) Serve(transport, port string) error {
 		fallthrough
 	default:
 		baseURL := fmt.Sprintf("http://localhost:%s", port)
-		log.Printf("Starting discord-mcp-go in HTTP SSE mode on :%s (baseURL: %s)", port, baseURL)
-		sseServer := server.NewSSEServer(s.MCPServer, baseURL)
-		return sseServer.Start(":" + port)
+		log.Printf("Starting discord-mcp-go in HTTP mode on :%s (baseURL: %s)", port, baseURL)
+		httpServer := NewHTTPServer(s, baseURL)
+		srv := &http.Server{
+			Addr:    ":" + port,
+			Handler: httpServer.Handler(),
+		}
+		return srv.ListenAndServe()
 	}
 }
