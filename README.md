@@ -1,6 +1,6 @@
 <div align="center">
   <h1>⚡ discord-mcp-go</h1>
-  <p><strong>Ultra-fast, lightweight Discord Model Context Protocol (MCP) server written in Go.</strong></p>
+  <p><strong>Production Discord Model Context Protocol (MCP) server written in Go.</strong></p>
   <p>
     <a href="https://github.com/0xOpCode/discord-mcp-go/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
     <a href="https://golang.org"><img alt="Go Version" src="https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white" /></a>
@@ -11,19 +11,19 @@
 
 ---
 
-## ⚡ Overview
+## Overview
 
-`discord-mcp-go` is a high-performance Discord MCP server designed for AI assistants and autonomous workflows (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It wraps the Discord API into 96 granular MCP tools, enabling full server administration, moderation, channel operations, polls, stickers, soundboard clips, and automated messaging.
+`discord-mcp-go` provides a production-grade Discord Model Context Protocol (MCP) server for AI assistants and autonomous agent platforms (Claude Desktop, Cursor, n8n, Antigravity, OpenClaw). It exposes 97 granular tools covering Discord server administration, moderation, channel operations, polls, stickers, soundboard clips, messaging, and multi-action block pipelines.
 
-### Why Go over Java Spring Boot?
+### Core Capabilities
 
-| Metric | Original Java Server | discord-mcp-go | Improvement |
-| :--- | :--- | :--- | :--- |
-| **Startup Latency** | ~8 - 15 seconds | **< 15 milliseconds** | **~600x faster boot** |
-| **RAM Footprint** | ~250MB - 400MB | **< 20 MB** | **93% memory savings** |
-| **Multi-Server Control** | Static instance configuration | **Dynamic guild routing** | All bot servers managed via single token |
-| **Transport Support** | stdio or Spring HTTP | **Streamable HTTP SSE + stdio** | Native dual transport |
-| **Deployment Footprint** | Heavy JRE (~380MB image) | **Static Alpine container (~18MB)** | 20x smaller image |
+- **Sub-15ms cold start**: Starts in under 15 milliseconds.
+- **Low memory footprint**: Runs inside less than 20 MB RAM.
+- **Dual transport architecture**: Native HTTP Server-Sent Events (SSE) and standard input/output (stdio).
+- **Dynamic guild routing**: Manages all bot-joined Discord guilds through runtime `guildId` parameters and `DISCORD_GUILD_ID` defaults.
+- **Blacklist protection**: Configurable guild blacklist (`DISCORD_BLACKLISTED_GUILDS`) to protect private servers against unauthorized agent actions.
+- **Compound block execution**: Chained multi-action pipelines with variable interpolation via `run_pipeline`.
+- **Minimal container footprint**: Multi-stage Alpine container image under 18 MB.
 
 ---
 
@@ -113,7 +113,10 @@ Add under Connectors UI or via reverse proxy URL:
 
 ---
 
-## 🛠️ Complete Tool Directory (96 Tools)
+## 🛠️ Complete Tool Directory (97 Tools)
+
+### Compound Workflows & Pipelines
+- `run_pipeline`: Execute a sequence of MCP actions as connected blocks with variable reference interpolation (e.g. `{{step1.id}}`) in a single network round-trip.
 
 ### Multi-Server & Discovery
 - `list_servers`: List all Discord guilds joined by the bot with IDs and admin flags.
