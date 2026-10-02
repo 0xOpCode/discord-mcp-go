@@ -1,0 +1,15 @@
+services:
+  discord-mcp-go:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: 0xopcode/discord-mcp-go:latest
+    container_name: discord-mcp-go
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - DISCORD_GUILD_ID=${DISCORD_GUILD_ID:-}
+      - PORT=8085
+      - TRANSPORT=sse
