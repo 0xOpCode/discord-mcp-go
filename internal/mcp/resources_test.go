@@ -144,4 +144,57 @@ func TestMCPResources(t *testing.T) {
 	if readResult.Result.Contents[0].Text != "Contact owner on discord @admin" {
 		t.Errorf("unexpected content text: %s", readResult.Result.Contents[0].Text)
 	}
+
+	// Test 4: verify embedded guides in resources/list
+	expectedGuides := map[string]bool{
+		"discord://guide/overview":       false,
+		"discord://guide/tools":          false,
+		"discord://guide/pipelines":      false,
+		"discord://guide/best-practices": false,
+	}
+
+	for _, res := range listResult.Result.Resources {
+		if _, ok := expectedGuides[res.URI]; ok {
+			expectedGuides[res.URI] = true
+		}
+	}
+
+	for uri, found := range expectedGuides {
+		if !found {
+			t.Errorf("expected guide resource %s not found in resources/list", uri)
+		}
+	}
+
+	// Test 5: resources/read for discord://guide/pipelines
+	guideReq := []byte(`{"jsonrpc":"2.0","id":4,"method":"resources/read","params":{"uri":"discord://guide/pipelines"}}`)
+	resp = s.HandleMessage(context.Background(), guideReq)
+	if resp == nil {
+		t.Fatal("expected response for guide read, got nil")
+	}
+
+	rawResp, err = json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("failed to marshal guide response: %v", err)
+	}
+
+	var guideResult struct {
+		Result struct {
+			Contents []struct {
+				URI      string `json:"uri"`
+				MIMEType string `json:"mimeType"`
+				Text     string `json:"text"`
+			} `json:"contents"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(rawResp, &guideResult); err != nil {
+		t.Fatalf("failed to unmarshal guide response: %v", err)
+	}
+
+	if len(guideResult.Result.Contents) != 1 {
+		t.Fatalf("expected 1 content entry for guide, got %d", len(guideResult.Result.Contents))
+	}
+
+	if guideResult.Result.Contents[0].MIMEType != "text/markdown" {
+		t.Errorf("expected text/markdown mimeType, got %s", guideResult.Result.Contents[0].MIMEType)
+	}
 }
