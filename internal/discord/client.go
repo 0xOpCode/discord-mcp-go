@@ -11,9 +11,10 @@ type Client struct {
 	Session        *discordgo.Session
 	DefaultGuildID string
 	BotUser        *discordgo.User
+	Blacklist      map[string]struct{}
 }
 
-func NewClient(token, defaultGuildID string) (*Client, error) {
+func NewClient(token, defaultGuildID string, blacklistedGuilds []string) (*Client, error) {
 	if token == "" {
 		return nil, fmt.Errorf("DISCORD_TOKEN environment variable is not set")
 	}
@@ -32,21 +33,65 @@ func NewClient(token, defaultGuildID string) (*Client, error) {
 		return nil, fmt.Errorf("failed to authenticate with Discord API: %w", err)
 	}
 
+	// Open gateway session for real-time presence/activity updates
+	_ = session.Open()
+
+	blacklistMap := make(map[string]struct{})
+	for _, id := range blacklistedGuilds {
+		if trimmed := strings.TrimSpace(id); trimmed != "" {
+			blacklistMap[trimmed] = struct{}{}
+		}
+	}
+
 	return &Client{
 		Session:        session,
 		DefaultGuildID: defaultGuildID,
 		BotUser:        botUser,
+		Blacklist:      blacklistMap,
 	}, nil
 }
 
+func (c *Client) IsBlacklisted(guildID string) bool {
+	if guildID == "" {
+		return false
+	}
+	_, found := c.Blacklist[guildID]
+	return found
+}
+
+func (c *Client) CheckGuildAllowed(guildID string) error {
+	if c.IsBlacklisted(guildID) {
+		return fmt.Errorf("action blocked: server %s is blacklisted", guildID)
+	}
+	return nil
+}
+
+func (c *Client) CheckChannelAllowed(channelID string) error {
+	if channelID == "" {
+		return nil
+	}
+	ch, err := c.Session.Channel(channelID)
+	if err != nil {
+		return nil
+	}
+	if ch.GuildID != "" && c.IsBlacklisted(ch.GuildID) {
+		return fmt.Errorf("action blocked: channel %s belongs to blacklisted server %s", channelID, ch.GuildID)
+	}
+	return nil
+}
+
 func (c *Client) ResolveGuildID(override string) (string, error) {
-	if strings.TrimSpace(override) != "" {
-		return strings.TrimSpace(override), nil
+	target := strings.TrimSpace(override)
+	if target == "" {
+		target = strings.TrimSpace(c.DefaultGuildID)
 	}
-	if strings.TrimSpace(c.DefaultGuildID) != "" {
-		return strings.TrimSpace(c.DefaultGuildID), nil
+	if target == "" {
+		return "", fmt.Errorf("guild_id parameter is required when DISCORD_GUILD_ID is not configured")
 	}
-	return "", fmt.Errorf("guild_id parameter is required when DISCORD_GUILD_ID is not configured")
+	if err := c.CheckGuildAllowed(target); err != nil {
+		return "", err
+	}
+	return target, nil
 }
 
 func (c *Client) ListServers() ([]*discordgo.UserGuild, error) {

@@ -35,6 +35,7 @@ Create a `.env` file:
 ```env
 DISCORD_TOKEN=your_bot_token_here
 DISCORD_GUILD_ID=optional_default_guild_id
+DISCORD_BLACKLISTED_GUILDS=optional_comma_separated_blacklisted_guild_ids
 PORT=8085
 TRANSPORT=sse
 ```
@@ -112,18 +113,21 @@ Add under Connectors UI or via reverse proxy URL:
 
 ---
 
-## 🛠️ Complete Tool Directory (75+ Tools)
+## 🛠️ Complete Tool Directory (82+ Tools)
 
 ### Multi-Server & Discovery
 - `list_servers`: List all Discord guilds joined by the bot with IDs and admin flags.
 - `get_server_info`: Detailed guild metadata, counts, owner, and settings.
 - `check_bot_permissions`: Comprehensive audit of bot permissions inside a guild.
+- `get_audit_logs`: Inspect audit log events and moderation actions.
+- `set_bot_activity`: Set custom bot presence status (playing, watching, streaming, listening).
 
 ### Message Management
 - `send_message`: Post text messages to specific channels.
 - `edit_message`: Edit bot-authored messages.
 - `delete_message`: Remove messages from channels.
 - `read_messages`: Paginated retrieval of channel history (cursor support: before, after, around).
+- `purge_messages`: Bulk delete up to 100 recent messages from a channel.
 - `add_reaction`: Add reactions using unicode or custom emojis.
 - `remove_reaction`: Remove bot reactions from messages.
 
@@ -142,6 +146,8 @@ Add under Connectors UI or via reverse proxy URL:
 - `list_channels`: List all server channels with IDs and types.
 - `get_channel_info`: Fetch detailed channel properties.
 - `move_channel`: Reposition channels and update category parentage.
+- `create_thread`: Spawn public or private discussion threads inside text channels.
+- `list_threads`: List active discussion threads within a text channel.
 
 ### Category Management
 - `create_category`: Create channel organizational categories.
@@ -170,6 +176,10 @@ Add under Connectors UI or via reverse proxy URL:
 - `remove_timeout`: Lift communication timeouts immediately.
 - `set_nickname`: Modify member nicknames.
 - `get_bans`: List banned users and recorded reasons.
+
+### Auto-Moderation
+- `list_automod_rules`: List active AutoMod keyword and spam filter rules.
+- `create_automod_rule`: Configure custom keyword and spam blocking rules.
 
 ### Voice & Stage Channels
 - `create_voice_channel`: Create voice channels with bitrate and user limits.

@@ -184,4 +184,51 @@ func RegisterMessageTools(s *server.MCPServer, client *discord.Client) {
 			return successResult(fmt.Sprintf("Reaction %s removed from message `%s`.", emoji, messageID)), nil
 		},
 	)
+
+	// purge_messages
+	s.AddTool(
+		mcp.NewTool("purge_messages",
+			mcp.WithDescription("Bulk delete up to 100 recent messages from a text channel"),
+			mcp.WithString("channelId", mcp.Required(), mcp.Description("Channel ID to purge messages from")),
+			mcp.WithNumber("count", mcp.Description("Number of messages to delete (1-100, default 50)")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			channelID := getString(req.Params.Arguments, "channelId")
+			if channelID == "" {
+				return errorResult(fmt.Errorf("channelId is required")), nil
+			}
+
+			if err := client.CheckChannelAllowed(channelID); err != nil {
+				return errorResult(err), nil
+			}
+
+			count := getInt(req.Params.Arguments, "count", 50)
+			if count < 1 {
+				count = 1
+			} else if count > 100 {
+				count = 100
+			}
+
+			messages, err := client.Session.ChannelMessages(channelID, count, "", "", "")
+			if err != nil {
+				return errorResult(fmt.Errorf("failed to retrieve messages for purge: %w", err)), nil
+			}
+
+			if len(messages) == 0 {
+				return successResult("No messages found to purge."), nil
+			}
+
+			messageIDs := make([]string, len(messages))
+			for i, m := range messages {
+				messageIDs[i] = m.ID
+			}
+
+			err = client.Session.ChannelMessagesBulkDelete(channelID, messageIDs)
+			if err != nil {
+				return errorResult(fmt.Errorf("bulk delete failed: %w", err)), nil
+			}
+
+			return successResult(fmt.Sprintf("Successfully purged %d messages from channel `%s`.", len(messageIDs), channelID)), nil
+		},
+	)
 }

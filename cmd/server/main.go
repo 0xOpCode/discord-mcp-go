@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/0xOpCode/discord-mcp-go/internal/config"
 	"github.com/0xOpCode/discord-mcp-go/internal/discord"
@@ -17,6 +18,7 @@ func main() {
 	portFlag := flag.String("port", cfg.Port, "HTTP port for SSE transport")
 	tokenFlag := flag.String("token", cfg.DiscordToken, "Discord Bot Token")
 	guildIDFlag := flag.String("guild-id", cfg.DefaultGuildID, "Default Discord Server (Guild) ID")
+	blacklistedFlag := flag.String("blacklisted-guilds", "", "Comma-separated list of blacklisted Guild IDs")
 	flag.Parse()
 
 	token := *tokenFlag
@@ -32,7 +34,17 @@ func main() {
 		guildID = os.Getenv("DISCORD_GUILD_ID")
 	}
 
-	discordClient, err := discord.NewClient(token, guildID)
+	blacklisted := cfg.BlacklistedGuilds
+	if *blacklistedFlag != "" {
+		for _, id := range strings.Split(*blacklistedFlag, ",") {
+			trimmed := strings.TrimSpace(id)
+			if trimmed != "" {
+				blacklisted = append(blacklisted, trimmed)
+			}
+		}
+	}
+
+	discordClient, err := discord.NewClient(token, guildID, blacklisted)
 	if err != nil {
 		log.Fatalf("Discord initialization failed: %v", err)
 	}
