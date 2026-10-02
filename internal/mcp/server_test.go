@@ -50,6 +50,10 @@ func TestRegisteredToolsCount(t *testing.T) {
 		"list_guild_members",
 		"search_guild_messages",
 		"set_event_image",
+		"list_pinned_messages",
+		"pin_message",
+		"unpin_message",
+		"crosspost_message",
 	}
 
 	for _, name := range expectedTools {
@@ -58,8 +62,8 @@ func TestRegisteredToolsCount(t *testing.T) {
 		}
 	}
 
-	if toolCount != 104 {
-		t.Fatalf("expected 104 tools, got %d", toolCount)
+	if toolCount != 108 {
+		t.Fatalf("expected 108 tools, got %d", toolCount)
 	}
 }
 
